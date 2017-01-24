@@ -37,6 +37,7 @@ app.all('*', function(req, res, next) {
 app.use('/', routes);
 app.use('/users', users);
 require('./imgUpload.js')(app);
+require('./routes/test.router.js')(app);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     var err = new Error('Not Found');
