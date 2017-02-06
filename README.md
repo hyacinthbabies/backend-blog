@@ -9,4 +9,5 @@ nodejs+express开发，数据库mongoDB+mongoose
     git clone 仓库代码
     npm install 
     npm start 会开启http://127.0.0.1:3000
-如果要使用数据库，需要下载mongoDB，并修改db.js文件中的
+   
+   如果要使用数据库，需要下载mongoDB，并修改db.js文件中的DB_URL为本地数据库地址
