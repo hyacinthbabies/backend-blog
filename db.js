@@ -1,12 +1,12 @@
 var mongoose = require('mongoose'),
-    DB_URL = 'mongodb://localhost:27017/shqTest';
+    DB_URL = 'mongodb://127.0.0.1:27017/shqTest';
 //不加控制台会promise没有
 mongoose.Promise = global.Promise;
 /**
  * 连接
  */
-mongoose.connect(DB_URL);
-
+mongoose.connect(DB_URL,{useMongoClient:true});
+//原来mongoose.createConnection(DB_URL);
 /**
  * 连接成功
  */
