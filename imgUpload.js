@@ -58,7 +58,7 @@ module.exports = function(app) {
         // });
         form.on('end', function() {
             console.log('end');
-            res.end('http://127.0.0.1:3000/avatar/'+resultName);
+            res.end(JSON.stringify({url:'http://127.0.0.1:3000/avatar/'+resultName}));
         });
 
         form.on('error', function(err) {
