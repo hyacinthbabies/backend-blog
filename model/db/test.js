@@ -1,6 +1,9 @@
+var mongoose = require('mongoose');
 var User = require("../user.js");
 var Article = require("../article.js");
 var Comment = require("../comment.js");
+var Photo = require("../photo.js");
+var CountAdd = require("../count");
  function format(date, format){
   if (date && format) {
     const o = {
@@ -61,18 +64,68 @@ function toDate(dateString){
     return format(date, "yyyy-MM-dd");
   }
 
-
+    function transStrToObjectId(str){
+        return mongoose.Types.ObjectId(str);
+    }   
 /**
  * 插入
  */
 module.exports = {
     // nodejs操作数据库，直接阅读mongoose操作APIhttp://mongoosejs.com/docs/guide.html
     // http://blog.csdn.net/u014267351/article/details/51212107
+    // 埋点统计
+    addCount:function(req,res){
+        var query = {articleId:req.body.articleId}
+        CountAdd.findOneAndUpdate(query,{$inc:{totalCount:1}},
+            {upsert:true}, function (err, result) {
+            if (err) {
+                console.log("Error:" + err);
+            } else {
+                console.log("result:" + result);
+                res.json(result);
+            }
+        })
+    },
+    // 获取统计数
+    getReadCount:function(req,res){
+        CountAdd.find({articleId:{$regex:req.query.articleId}},function(err,doc){
+            if (err) {
+                console.log("Error:" + err);
+            } else {
+                console.log("Res:" + doc);
+                res.json(doc);
+            }
+        })
+    },
+    //上传图片
+    insertPhoto: function(req,res) {
+        // req.body.photoDate = formatFull(new Date(req.body.photoDate));
+        var photo = new Photo(req.body);
+        photo.save(function(err,doc) {
+            if (err) {
+                console.log("Error:" + err);
+            } else {
+                console.log("Res:" + doc);
+                res.json(doc);
+            }
+            // res.next();
+        });
+    },
+    findPhotoList: function(req, res) {
+        Photo.find(function(err,doc){
+            if (err) {
+                console.log("Error:" + err);
+            } else {
+                console.log("Res:" + doc);
+                res.json(doc);
+            }
+        })
+    },
+    //上传文章
     insert: function(req,res) {
         req.body.articleDate = formatFull(new Date(req.body.articleDate));
         var article = new Article(req.body);
         article.save(function(err,doc) {
-
             if (err) {
                 console.log("Error:" + err);
             } else {
@@ -136,22 +189,47 @@ module.exports = {
         });
     },
     getArticleList: function(req, res) {
-        // Article.find(function(err, doc) {
-        //     if (err) {
-        //         console.log("Error:" + err);
-        //     } else {
-        //         console.log("Res:" + doc);
-        //         res.json(doc);
-        //     }
-        // })
-        Article.find({articleType:{$regex:req.query.articleType},articleName:{$regex:req.query.keyword}},function(err,doc){
+        Article
+        .aggregate([
+            {
+                $lookup: {
+                    from: "Comment",
+                    localField: "_id",
+                    foreignField: "articleId", 
+                    as: "comments" 
+                }
+            },{
+                $lookup: {
+                    from: "Count",
+                    localField: "_id",
+                    foreignField: "articleId", 
+                    as: "count" 
+                }
+            },
+            {
+                $sort:{articleDate:-1}
+            },{
+                $match:{
+                    articleType:{$regex:req.query.articleType},
+                    articleName:{$regex:req.query.keyword}}
+                // 1为升序，-1为降序
+            },{ $project : {
+                articleDate : 1 ,
+                articleName : 1 ,
+                comments:1,
+                count:1,
+                tag:1,
+                image:1
+            }}
+        ])
+        .exec(function(err,doc){
             if (err) {
                 console.log("Error:" + err);
             } else {
-                console.log("Res:" + doc);
                 res.json(doc);
             }
         })
+
     },
     removeArticle:function(req,res){
         console.log(req,"rrrr")
@@ -192,12 +270,26 @@ module.exports = {
         });
     
     },
+    getNewestArticleList:function(req,res){
+        Article.find({},function(err,doc){
+            if (err) {
+                console.log("Error:" + err);
+            } else {
+                console.log("Res:" + doc);
+                res.json(doc);
+            }
+            // 1为升序，-1为降序
+        }).sort({articleDate:-1})
+        .limit(5)
+    },
     commentInsert:function(req,res){
+        req.body.time = formatFull(new Date(req.body.time));
         var comment = new Comment(req.body);
         comment.save(function(err, doc) {
             if (err) {
                 console.log("Error:" + err);
             } else {
+                
                 console.log("Res:" + res);
                 res.json(doc);
             }
@@ -241,10 +333,13 @@ module.exports = {
         })
     },
     getCommentLists:function(req,res){
-        Comment.find(function(err, doc) {
+        Comment.find({articleId:req.query.articleId})
+        .sort({time:-1})
+        .exec(function(err, doc) {
             if (err) {
                 console.log("Error:" + err);
-            } else {           
+            } else {       
+                console.log("Error33333:" + err);    
                 res.json(doc);
             }
         })

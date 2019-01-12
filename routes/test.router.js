@@ -17,4 +17,10 @@ module.exports = function(app) {
   app.use('/api/commentLists',usersController.getCommentLists);
   app.use('/api/postComment',usersController.commentInsert);
   app.use('/api/removeComment',usersController.removeComment);
+  app.use('/api/postPhoto',usersController.insertPhoto);
+  app.use('/api/getPhotoList',usersController.findPhotoList);
+  app.use('/api/articleCount/add',usersController.addCount);
+  app.use('/api/articleCount/readCount',usersController.getReadCount);
+  app.use('/api/newest/list',usersController.getNewestArticleList);
+  
 };

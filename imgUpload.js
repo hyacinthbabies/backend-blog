@@ -42,7 +42,7 @@ module.exports = function(app) {
             }
 
             var avatarName = files.pic.name.split('.');
-            console.log(avatarName);
+            console.log(files.pic.path);
             var newPath = form.uploadDir + avatarName[0] + '.' +extName;
             resultName = avatarName[0] + '.' +extName;
             fs.renameSync(files.pic.path, newPath); //重命名
