@@ -176,14 +176,14 @@ module.exports = {
             }
         })
     },
-    userInsert:function(req) {
-        var user = new User(req.body);
-        user.save(function(err, res) {
-
+    userInsert:function(req,res) {
+        User.findOneAndUpdate({userPwd:req.body.userPwd},{'$set':{userPwd:req.body.userPwd,
+            userName:req.body.userName}},{upsert:true,new:true},function(err, doc) {
             if (err) {
                 console.log("Error:" + err);
             } else {
-                console.log("Res:" + res);
+                console.log("Res:", doc);
+                res.json(doc);
             }
             // res.next();
         });
@@ -296,42 +296,54 @@ module.exports = {
             // res.next();
         });
     },
-    getComments:function(req,res){
-        Comment.find(function(err, doc) {
+    replayInsert:function(req,res){
+        Comment.update({_id:req.body.commentId},{$push:{
+            replyList:req.body
+        }},function(err, doc) {
             if (err) {
                 console.log("Error:" + err);
             } else {
-                //将数据中parentId为空和不为空的数据分开
-                //遍历比较parentId和_id是否相同，进行归类
-                var result =doc;
-                let hasParentId = [];
-                let hasNoParentId = [];
-                let newList = [];
-                for(let i=0;i<result.length;i++){      
-                    result[i].parentId === ""?hasNoParentId.push(doc[i]):
-                    hasParentId.push(result[i]);
-                }
-                for(let i=0;i<hasNoParentId.length;i++){
-                    hasNoParentId[i].children = [];                                            
-                    for(let j=0;j<hasParentId.length;j++){
-                        if(hasNoParentId[i]._id == hasParentId[j].parentId){
-                            hasNoParentId[i].children.push(hasParentId[j]);  
-                        }
-                    }
-                    newList.push({
-                        _id:hasNoParentId[i]._id,
-                        articleId:hasNoParentId[i].articleId,
-                        content:hasNoParentId[i].content,
-                        children:hasNoParentId[i].children,
-                        userId:hasNoParentId[i].userId,
-                        userName:hasNoParentId[i].userName, 
-                        time:hasNoParentId[i].time, 
-                    })
-                }                         
-                res.json(newList);
+                console.log("Res:" + doc);
+                res.json(doc);
             }
         })
     },
+    // getComments:function(req,res){
+    //     Comment.find(function(err, doc) {
+    //         if (err) {
+    //             console.log("Error:" + err);
+    //         } else {
+    //             //将数据中parentId为空和不为空的数据分开
+    //             //遍历比较parentId和_id是否相同，进行归类
+    //             var result =doc;
+    //             let hasParentId = [];
+    //             let hasNoParentId = [];
+    //             let newList = [];
+    //             for(let i=0;i<result.length;i++){      
+    //                 result[i].parentId === ""?hasNoParentId.push(doc[i]):
+    //                 hasParentId.push(result[i]);
+    //             }
+    //             for(let i=0;i<hasNoParentId.length;i++){
+    //                 hasNoParentId[i].children = [];                                            
+    //                 for(let j=0;j<hasParentId.length;j++){
+    //                     if(hasNoParentId[i]._id == hasParentId[j].parentId){
+    //                         hasNoParentId[i].children.push(hasParentId[j]);  
+    //                     }
+    //                 }
+    //                 newList.push({
+    //                     _id:hasNoParentId[i]._id,
+    //                     articleId:hasNoParentId[i].articleId,
+    //                     content:hasNoParentId[i].content,
+    //                     children:hasNoParentId[i].children,
+    //                     userId:hasNoParentId[i].userId,
+    //                     userName:hasNoParentId[i].userName, 
+    //                     time:hasNoParentId[i].time, 
+    //                 })
+    //             }                         
+    //             res.json(newList);
+    //         }
+    //     })
+    // },
     getCommentLists:function(req,res){
         Comment.find({articleId:req.query.articleId})
         .sort({time:-1})

@@ -13,7 +13,7 @@ module.exports = function(app) {
   app.use('/api/removeArticle',usersController.removeArticle);
   app.use('/api/getArticlesCount',usersController.getArticlesCount);
   app.use('/api/postUser',usersController.userInsert);
-  app.use('/api/comment/list',usersController.getComments);
+  app.use('/api/postReply',usersController.replayInsert);
   app.use('/api/commentLists',usersController.getCommentLists);
   app.use('/api/postComment',usersController.commentInsert);
   app.use('/api/removeComment',usersController.removeComment);
